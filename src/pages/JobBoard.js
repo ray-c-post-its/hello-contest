@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { storage } from "../utils/storage";
 import PostItCard from "../components/PostItCard";
 
-const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
+const ANTHROPIC_API_KEY = process.env.REACT_APP_ANTHROPIC_API_KEY;
 
 export default function JobBoard({ onSelectJob }) {
   const [jobs, setJobs] = useState([]);
@@ -20,25 +19,35 @@ export default function JobBoard({ onSelectJob }) {
 
   const types = ["All", "Remote", "Hybrid", "On-site"];
 
-  // Jobs to display — AI results if searched, all jobs if not
   const displayJobs = searched
     ? results
     : jobs.filter(j => filter === "All" || j.type === filter);
 
   const handleSearch = async () => {
-    if (!query.trim()) return;
+    if (!query.trim() || loading) return;
     setLoading(true);
     setSearched(true);
     setSummary("");
     setResults([]);
 
     try {
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 1024,
+          messages: [
+            {
+              role: "user",
+              content: `You are an expert job matching assistant for a recruitment platform called Post-Its.
 
-      const prompt = `You are an expert job matching assistant for a recruitment platform called Post-Its.
-
-A job seeker has described what they're looking for in natural language:
+A job seeker has described what they're looking for:
 "${query}"
 
 Here are all available jobs:
@@ -55,23 +64,25 @@ ${JSON.stringify(jobs.map(j => ({
   requirements: j.requirements,
 })), null, 2)}
 
-Your job is to deeply understand what the person is looking for — even if they don't use exact keywords. Consider:
-- Skills and tools they mention (e.g. "Excel" → look for finance, analyst, operations roles that use Excel)
-- Location preferences (e.g. "short commute to Washington DC" → prioritize DC Metro, Arlington, McLean, Bethesda jobs)
+Deeply understand what the person is looking for — even if they don't use exact keywords. Consider:
+- Skills and tools mentioned (e.g. "Excel" → finance, analyst, operations roles)
+- Location preferences (e.g. "short commute to DC" → DC Metro, Arlington, McLean, Bethesda)
 - Work style (remote, hybrid, on-site)
 - Salary expectations if mentioned
 - Industry or role type preferences
-- Lifestyle factors (e.g. "work-life balance", "no commute", "fast-paced")
+- Lifestyle factors (work-life balance, no commute, fast-paced)
 
-Return ONLY a valid JSON object with:
-- "matchedIds": string[] — IDs of matching jobs ordered by relevance (best match first). Include partial matches too. Return at least 6 results if possible, up to 20.
-- "summary": string — one friendly, specific sentence describing what you found and why (e.g. "Found 8 analyst roles near DC that commonly use Excel, sorted by commute distance.")
+Return ONLY a valid JSON object with no markdown:
+- "matchedIds": string[] — IDs ordered by relevance, best match first, at least 6 up to 20
+- "summary": string — one friendly specific sentence describing what you found`,
+            },
+          ],
+        }),
+      });
 
-No markdown, no explanation, just the JSON.`;
-
-      const geminiResult = await model.generateContent(prompt);
-      const raw = geminiResult.response.text().trim().replace(/```json|```/g, "");
-      const parsed = JSON.parse(raw);
+      const data = await response.json();
+      const text = data.content[0].text.trim().replace(/```json|```/g, "");
+      const parsed = JSON.parse(text);
 
       const matched = (parsed.matchedIds || [])
         .map(id => jobs.find(j => j.id === id))
@@ -135,7 +146,12 @@ No markdown, no explanation, just the JSON.`;
             placeholder='e.g. "I want a job near DC that uses Excel with a short commute"'
             value={query}
             onChange={e => setQuery(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && handleSearch()}
+            onKeyDown={e => {
+              if (e.key === "Enter" && !loading) {
+                e.preventDefault();
+                handleSearch();
+              }
+            }}
             style={{
               flex: 1,
               border: "none",
@@ -179,7 +195,7 @@ No markdown, no explanation, just the JSON.`;
           </button>
         </div>
 
-        {/* Filter pills — only show when not in search results mode */}
+        {/* Filter pills */}
         {!searched && (
           <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
             {types.map(t => (
@@ -215,7 +231,6 @@ No markdown, no explanation, just the JSON.`;
         padding: "48px 40px 80px",
         position: "relative",
       }}>
-        {/* Cork texture overlay */}
         <div style={{
           position: "absolute",
           inset: 0,
@@ -225,7 +240,6 @@ No markdown, no explanation, just the JSON.`;
         }} />
 
         <div style={{ maxWidth: "1200px", margin: "0 auto", position: "relative" }}>
-          {/* Loading state */}
           {loading && (
             <div style={{
               textAlign: "center",
@@ -240,16 +254,13 @@ No markdown, no explanation, just the JSON.`;
                 color: "#fff",
                 textShadow: "1px 1px 3px rgba(0,0,0,0.2)",
                 margin: 0,
-              }}>
-                Reading your mind…
-              </p>
+              }}>Reading your mind…</p>
               <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.7)", marginTop: "8px" }}>
                 Matching your query against {jobs.length} jobs
               </p>
             </div>
           )}
 
-          {/* Empty / no results */}
           {!loading && searched && results.length === 0 && (
             <div style={{
               textAlign: "center",
@@ -282,7 +293,6 @@ No markdown, no explanation, just the JSON.`;
             </div>
           )}
 
-          {/* Results */}
           {!loading && displayJobs.length > 0 && (
             <>
               <div style={{

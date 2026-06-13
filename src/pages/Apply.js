@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { storage } from "../utils/storage";
 
-const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
+const ANTHROPIC_API_KEY = process.env.REACT_APP_ANTHROPIC_API_KEY;
 
 export default function Apply({ job, userEmail, onBack, onSubmitted }) {
   const [questions, setQuestions] = useState([]);
@@ -18,22 +17,37 @@ export default function Apply({ job, userEmail, onBack, onSubmitted }) {
 
   const generateQuestions = async () => {
     try {
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 512,
+          messages: [
+            {
+              role: "user",
+              content: `You are a thoughtful hiring assistant for "${job.company}" hiring for "${job.title}".
 
-      const prompt = `You are a thoughtful hiring assistant for a company called "${job.company}" hiring for a "${job.title}" role.
-
-Generate exactly 3 short, personalized interview questions for this role. The questions should feel human, specific to the job, and help the employer understand the candidate's real experience and personality — not generic HR questions.
+Generate exactly 3 short personalized interview questions. Make them human, specific to the job, and help the employer understand the candidate's real experience and personality — not generic HR questions.
 
 Job description: ${job.description}
 Requirements: ${job.requirements || "Not specified"}
-Tags: ${(job.tags || []).join(", ")}
+Skills: ${(job.tags || []).join(", ")}
 
-Return ONLY a JSON array of 3 strings. No markdown, no explanation.`;
+Return ONLY a valid JSON array of 3 strings. No markdown, no explanation.`,
+            },
+          ],
+        }),
+      });
 
-      const result = await model.generateContent(prompt);
-      const raw = result.response.text().trim().replace(/```json|```/g, "");
-      const parsed = JSON.parse(raw);
+      const data = await response.json();
+      const text = data.content[0].text.trim().replace(/```json|```/g, "");
+      const parsed = JSON.parse(text);
       setQuestions(parsed);
     } catch (err) {
       console.error("Question generation error:", err);
@@ -127,16 +141,27 @@ Return ONLY a JSON array of 3 strings. No markdown, no explanation.`;
 
       {/* Contact info */}
       <section style={{ marginBottom: "36px" }}>
-        <h2 style={{ fontFamily: "'Caveat', cursive", fontSize: "24px", fontWeight: "700", margin: "0 0 16px", color: "#1a1a1a" }}>
-          Your details
-        </h2>
+        <h2 style={{
+          fontFamily: "'Caveat', cursive",
+          fontSize: "24px",
+          fontWeight: "700",
+          margin: "0 0 16px",
+          color: "#1a1a1a",
+        }}>Your details</h2>
+
         {[
           { key: "name", label: "Full name", placeholder: "Jane Smith", required: true },
           { key: "email", label: "Email address", placeholder: "jane@example.com", required: true },
           { key: "linkedin", label: "LinkedIn profile", placeholder: "linkedin.com/in/janesmith", required: false },
         ].map(({ key, label, placeholder, required }) => (
           <div key={key} style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#444", marginBottom: "6px" }}>
+            <label style={{
+              display: "block",
+              fontSize: "13px",
+              fontWeight: "600",
+              color: "#444",
+              marginBottom: "6px",
+            }}>
               {label} {required && <span style={{ color: "#e05" }}>*</span>}
             </label>
             <input
@@ -160,7 +185,13 @@ Return ONLY a JSON array of 3 strings. No markdown, no explanation.`;
 
         {/* Resume upload */}
         <div>
-          <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#444", marginBottom: "6px" }}>
+          <label style={{
+            display: "block",
+            fontSize: "13px",
+            fontWeight: "600",
+            color: "#444",
+            marginBottom: "6px",
+          }}>
             Resume <span style={{ color: "#999", fontWeight: "400" }}>(PDF or Word)</span>
           </label>
           <label style={{
@@ -188,15 +219,24 @@ Return ONLY a JSON array of 3 strings. No markdown, no explanation.`;
 
       {/* AI interview questions */}
       <section style={{ marginBottom: "36px" }}>
-        <h2 style={{ fontFamily: "'Caveat', cursive", fontSize: "24px", fontWeight: "700", margin: "0 0 6px", color: "#1a1a1a" }}>
-          A few questions
-        </h2>
+        <h2 style={{
+          fontFamily: "'Caveat', cursive",
+          fontSize: "24px",
+          fontWeight: "700",
+          margin: "0 0 6px",
+          color: "#1a1a1a",
+        }}>A few questions</h2>
         <p style={{ fontSize: "13px", color: "#888", margin: "0 0 20px" }}>
           These are tailored to this specific role. Take your time.
         </p>
 
         {loading ? (
-          <div style={{ textAlign: "center", padding: "32px", color: "#aaa", fontSize: "14px" }}>
+          <div style={{
+            textAlign: "center",
+            padding: "32px",
+            color: "#aaa",
+            fontSize: "14px",
+          }}>
             ✨ Crafting questions for this role…
           </div>
         ) : (
@@ -208,7 +248,13 @@ Return ONLY a JSON array of 3 strings. No markdown, no explanation.`;
               marginBottom: "20px",
               boxShadow: "2px 2px 8px rgba(0,0,0,0.08)",
             }}>
-              <div style={{ fontFamily: "'Caveat', cursive", fontSize: "18px", fontWeight: "700", color: "#1a1a1a", marginBottom: "12px" }}>
+              <div style={{
+                fontFamily: "'Caveat', cursive",
+                fontSize: "18px",
+                fontWeight: "700",
+                color: "#1a1a1a",
+                marginBottom: "12px",
+              }}>
                 {i + 1}. {q}
               </div>
               <textarea
