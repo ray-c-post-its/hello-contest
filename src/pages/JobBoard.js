@@ -1,25 +1,99 @@
 import React, { useState, useEffect } from "react";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { storage } from "../utils/storage";
 import PostItCard from "../components/PostItCard";
+
+const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
 
 export default function JobBoard({ onSelectJob }) {
   const [jobs, setJobs] = useState([]);
   const [filter, setFilter] = useState("All");
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [summary, setSummary] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
 
   useEffect(() => {
     setJobs(storage.getJobs());
   }, []);
 
   const types = ["All", "Remote", "Hybrid", "On-site"];
-  const filtered = jobs.filter(j => {
-    const matchesType = filter === "All" || j.type === filter;
-    const matchesQuery = !query ||
-      j.title.toLowerCase().includes(query.toLowerCase()) ||
-      j.company.toLowerCase().includes(query.toLowerCase()) ||
-      j.location.toLowerCase().includes(query.toLowerCase());
-    return matchesType && matchesQuery;
-  });
+
+  // Jobs to display — AI results if searched, all jobs if not
+  const displayJobs = searched
+    ? results
+    : jobs.filter(j => filter === "All" || j.type === filter);
+
+  const handleSearch = async () => {
+    if (!query.trim()) return;
+    setLoading(true);
+    setSearched(true);
+    setSummary("");
+    setResults([]);
+
+    try {
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+      const prompt = `You are an expert job matching assistant for a recruitment platform called Post-Its.
+
+A job seeker has described what they're looking for in natural language:
+"${query}"
+
+Here are all available jobs:
+${JSON.stringify(jobs.map(j => ({
+  id: j.id,
+  title: j.title,
+  company: j.company,
+  location: j.location,
+  salary: j.salary,
+  commute: j.commute,
+  type: j.type,
+  tags: j.tags,
+  description: j.description,
+  requirements: j.requirements,
+})), null, 2)}
+
+Your job is to deeply understand what the person is looking for — even if they don't use exact keywords. Consider:
+- Skills and tools they mention (e.g. "Excel" → look for finance, analyst, operations roles that use Excel)
+- Location preferences (e.g. "short commute to Washington DC" → prioritize DC Metro, Arlington, McLean, Bethesda jobs)
+- Work style (remote, hybrid, on-site)
+- Salary expectations if mentioned
+- Industry or role type preferences
+- Lifestyle factors (e.g. "work-life balance", "no commute", "fast-paced")
+
+Return ONLY a valid JSON object with:
+- "matchedIds": string[] — IDs of matching jobs ordered by relevance (best match first). Include partial matches too. Return at least 6 results if possible, up to 20.
+- "summary": string — one friendly, specific sentence describing what you found and why (e.g. "Found 8 analyst roles near DC that commonly use Excel, sorted by commute distance.")
+
+No markdown, no explanation, just the JSON.`;
+
+      const geminiResult = await model.generateContent(prompt);
+      const raw = geminiResult.response.text().trim().replace(/```json|```/g, "");
+      const parsed = JSON.parse(raw);
+
+      const matched = (parsed.matchedIds || [])
+        .map(id => jobs.find(j => j.id === id))
+        .filter(Boolean);
+
+      setResults(matched);
+      setSummary(parsed.summary || "");
+    } catch (err) {
+      console.error("Search error:", err);
+      setSummary("Search ran into an issue — try again.");
+      setResults([]);
+    }
+
+    setLoading(false);
+  };
+
+  const handleClear = () => {
+    setQuery("");
+    setSearched(false);
+    setResults([]);
+    setSummary("");
+  };
 
   return (
     <div style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -41,13 +115,13 @@ export default function JobBoard({ onSelectJob }) {
           Find your next role,<br />the human way.
         </h1>
         <p style={{ color: "#888", fontSize: "15px", margin: "0 0 32px" }}>
-          Every post-it is a door. Find yours.
+          Describe what you're looking for in plain English — our AI does the matching.
         </p>
 
         {/* Search bar */}
         <div style={{
           display: "flex",
-          maxWidth: "560px",
+          maxWidth: "680px",
           margin: "0 auto 28px",
           background: "#fff9c4",
           borderRadius: "12px",
@@ -58,9 +132,10 @@ export default function JobBoard({ onSelectJob }) {
         }}>
           <input
             type="text"
-            placeholder='Search jobs, companies, locations...'
+            placeholder='e.g. "I want a job near DC that uses Excel with a short commute"'
             value={query}
             onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleSearch()}
             style={{
               flex: 1,
               border: "none",
@@ -72,39 +147,61 @@ export default function JobBoard({ onSelectJob }) {
               minWidth: 0,
             }}
           />
-          {query && (
-            <button onClick={() => setQuery("")} style={{
+          {searched && (
+            <button onClick={handleClear} style={{
               background: "none",
               border: "none",
               cursor: "pointer",
               fontSize: "16px",
               color: "#888",
               padding: "0 4px",
+              flexShrink: 0,
             }}>✕</button>
           )}
+          <button
+            onClick={handleSearch}
+            disabled={loading}
+            style={{
+              padding: "10px 22px",
+              background: loading ? "#888" : "#1a1a1a",
+              color: "#fff",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "14px",
+              fontWeight: "600",
+              cursor: loading ? "not-allowed" : "pointer",
+              fontFamily: "'Inter', sans-serif",
+              flexShrink: 0,
+              transition: "background 0.15s ease",
+            }}
+          >
+            {loading ? "Searching…" : "Search"}
+          </button>
         </div>
 
-        {/* Filter pills */}
-        <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
-          {types.map(t => (
-            <button
-              key={t}
-              onClick={() => setFilter(t)}
-              style={{
-                padding: "7px 18px",
-                borderRadius: "20px",
-                border: filter === t ? "2px solid #1a1a1a" : "1.5px solid #e0e0e0",
-                background: filter === t ? "#1a1a1a" : "#fff",
-                color: filter === t ? "#fff" : "#555",
-                fontSize: "13px",
-                fontWeight: "600",
-                cursor: "pointer",
-                fontFamily: "'Inter', sans-serif",
-                transition: "all 0.15s ease",
-              }}
-            >{t}</button>
-          ))}
-        </div>
+        {/* Filter pills — only show when not in search results mode */}
+        {!searched && (
+          <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
+            {types.map(t => (
+              <button
+                key={t}
+                onClick={() => setFilter(t)}
+                style={{
+                  padding: "7px 18px",
+                  borderRadius: "20px",
+                  border: filter === t ? "2px solid #1a1a1a" : "1.5px solid #e0e0e0",
+                  background: filter === t ? "#1a1a1a" : "#fff",
+                  color: filter === t ? "#fff" : "#555",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  fontFamily: "'Inter', sans-serif",
+                  transition: "all 0.15s ease",
+                }}
+              >{t}</button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Corkboard */}
@@ -122,15 +219,38 @@ export default function JobBoard({ onSelectJob }) {
         <div style={{
           position: "absolute",
           inset: 0,
-          backgroundImage: `
-            radial-gradient(circle at 1px 1px, rgba(0,0,0,0.08) 1px, transparent 0)
-          `,
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(0,0,0,0.08) 1px, transparent 0)`,
           backgroundSize: "12px 12px",
           pointerEvents: "none",
         }} />
 
         <div style={{ maxWidth: "1200px", margin: "0 auto", position: "relative" }}>
-          {filtered.length === 0 ? (
+          {/* Loading state */}
+          {loading && (
+            <div style={{
+              textAlign: "center",
+              padding: "80px 24px",
+              background: "rgba(255,255,255,0.15)",
+              borderRadius: "12px",
+            }}>
+              <div style={{ fontSize: "36px", marginBottom: "16px" }}>✨</div>
+              <p style={{
+                fontFamily: "'Caveat', cursive",
+                fontSize: "24px",
+                color: "#fff",
+                textShadow: "1px 1px 3px rgba(0,0,0,0.2)",
+                margin: 0,
+              }}>
+                Reading your mind…
+              </p>
+              <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.7)", marginTop: "8px" }}>
+                Matching your query against {jobs.length} jobs
+              </p>
+            </div>
+          )}
+
+          {/* Empty / no results */}
+          {!loading && searched && results.length === 0 && (
             <div style={{
               textAlign: "center",
               padding: "80px 24px",
@@ -144,28 +264,68 @@ export default function JobBoard({ onSelectJob }) {
                 color: "#fff",
                 margin: "0 0 8px",
                 textShadow: "1px 1px 3px rgba(0,0,0,0.2)",
-              }}>No jobs found.</p>
-              <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.7)" }}>
-                Try a different filter or check back soon.
+              }}>No matches found.</p>
+              <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.7)", marginBottom: "20px" }}>
+                Try describing what you're looking for differently.
               </p>
+              <button onClick={handleClear} style={{
+                padding: "10px 24px",
+                background: "#fff",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "14px",
+                fontWeight: "600",
+                cursor: "pointer",
+                fontFamily: "'Inter', sans-serif",
+                color: "#1a1a1a",
+              }}>Browse all jobs</button>
             </div>
-          ) : (
+          )}
+
+          {/* Results */}
+          {!loading && displayJobs.length > 0 && (
             <>
-              <p style={{
-                color: "rgba(255,255,255,0.8)",
-                fontSize: "13px",
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
                 marginBottom: "32px",
-                textShadow: "1px 1px 2px rgba(0,0,0,0.2)",
+                flexWrap: "wrap",
+                gap: "8px",
               }}>
-                {filtered.length} {filtered.length === 1 ? "posting" : "postings"} on the board
-              </p>
+                <p style={{
+                  color: "rgba(255,255,255,0.85)",
+                  fontSize: "13px",
+                  margin: 0,
+                  textShadow: "1px 1px 2px rgba(0,0,0,0.2)",
+                }}>
+                  {searched
+                    ? summary || `${results.length} matches for "${query}"`
+                    : `${displayJobs.length} ${filter === "All" ? "" : filter + " "}${displayJobs.length === 1 ? "posting" : "postings"} on the board`
+                  }
+                </p>
+                {searched && (
+                  <button onClick={handleClear} style={{
+                    padding: "6px 14px",
+                    background: "rgba(255,255,255,0.2)",
+                    border: "1px solid rgba(255,255,255,0.4)",
+                    borderRadius: "20px",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    fontFamily: "'Inter', sans-serif",
+                    color: "#fff",
+                  }}>✕ Clear search</button>
+                )}
+              </div>
+
               <div style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
                 gap: "48px 36px",
                 paddingTop: "20px",
               }}>
-                {filtered.map((job, i) => (
+                {displayJobs.map((job, i) => (
                   <PostItCard
                     key={job.id}
                     job={job}
