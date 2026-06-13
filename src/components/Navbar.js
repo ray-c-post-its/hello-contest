@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 
-export default function Navbar({ email, role, onNavigate, signOut }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-
+export default function Navbar({ email, role, activeMode, onModeSwitch, onNavigate, signOut }) {
   return (
     <>
       <link
@@ -48,19 +46,14 @@ export default function Navbar({ email, role, onNavigate, signOut }) {
           Post-Its
         </button>
 
-        {/* Center nav links */}
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "4px",
-        }}>
-          {role === "seeker" && (
+        {/* Center nav links — changes based on active mode */}
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          {activeMode === "seeker" && (
             <>
               <NavLink onClick={() => onNavigate("home")}>Browse Jobs</NavLink>
-              <NavLink onClick={() => onNavigate("becomeEmployer")}>Post a Job</NavLink>
             </>
           )}
-          {role === "employer" && (
+          {activeMode === "employer" && (
             <>
               <NavLink onClick={() => onNavigate("home")}>My Postings</NavLink>
               <NavLink onClick={() => onNavigate("createJob")}>+ New Job</NavLink>
@@ -69,22 +62,42 @@ export default function Navbar({ email, role, onNavigate, signOut }) {
         </div>
 
         {/* Right side */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {/* Mode toggle */}
+          {role && (
+            <div style={{
+              display: "flex",
+              background: "#f5f5f5",
+              borderRadius: "20px",
+              padding: "3px",
+              gap: "2px",
+            }}>
+              <ModeButton
+                active={activeMode === "seeker"}
+                onClick={() => onModeSwitch("seeker")}
+              >
+                🔍 Browse
+              </ModeButton>
+              <ModeButton
+                active={activeMode === "employer"}
+                onClick={() => onModeSwitch("employer")}
+              >
+                🏢 Hiring
+              </ModeButton>
+            </div>
+          )}
+
           <span style={{
-            fontSize: "11px",
-            padding: "3px 10px",
-            borderRadius: "20px",
-            background: role === "employer" ? "#fff9c4" : "#cce5ff",
-            color: "#444",
-            fontWeight: "600",
-            textTransform: "uppercase",
-            letterSpacing: "0.5px",
+            fontSize: "13px",
+            color: "#888",
+            maxWidth: "160px",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
           }}>
-            {role === "employer" ? "Hiring" : "Job Seeker"}
-          </span>
-          <span style={{ fontSize: "13px", color: "#888", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {email}
           </span>
+
           <button onClick={signOut} style={{
             fontSize: "13px",
             padding: "7px 16px",
@@ -94,7 +107,6 @@ export default function Navbar({ email, role, onNavigate, signOut }) {
             color: "#444",
             cursor: "pointer",
             fontFamily: "'Inter', sans-serif",
-            transition: "all 0.15s ease",
           }}>Sign out</button>
         </div>
       </nav>
@@ -120,6 +132,27 @@ function NavLink({ onClick, children }) {
         color: hovered ? "#1a1a1a" : "#555",
         fontFamily: "'Inter', sans-serif",
         transition: "all 0.15s ease",
+      }}
+    >{children}</button>
+  );
+}
+
+function ModeButton({ active, onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: active ? "#1a1a1a" : "transparent",
+        color: active ? "#fff" : "#666",
+        border: "none",
+        borderRadius: "16px",
+        padding: "5px 14px",
+        fontSize: "12px",
+        fontWeight: "600",
+        cursor: "pointer",
+        fontFamily: "'Inter', sans-serif",
+        transition: "all 0.15s ease",
+        whiteSpace: "nowrap",
       }}
     >{children}</button>
   );

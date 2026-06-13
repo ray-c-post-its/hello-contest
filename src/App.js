@@ -14,7 +14,6 @@ import Apply from "./pages/Apply";
 import EmployerDashboard from "./pages/EmployerDashboard";
 import CreateJob from "./pages/CreateJob";
 import ApplicationsView from "./pages/ApplicationsView";
-import BecomeEmployer from "./pages/BecomeEmployer";
 
 Amplify.configure(awsConfig);
 
@@ -22,6 +21,7 @@ function PostItsApp({ user, signOut }) {
   const email = user?.signInDetails?.loginId || user?.attributes?.email || user?.username || "";
 
   const [role, setRole] = useState(null);
+  const [activeMode, setActiveMode] = useState(null); // "seeker" or "employer"
   const [view, setView] = useState("home");
   const [selectedJob, setSelectedJob] = useState(null);
   const [selectedJobIndex, setSelectedJobIndex] = useState(0);
@@ -29,12 +29,24 @@ function PostItsApp({ user, signOut }) {
 
   useEffect(() => {
     const saved = storage.getUserRole(email);
-    if (saved) setRole(saved);
+    if (saved) {
+      setRole(saved);
+      setActiveMode(saved); // default active mode matches their role
+    }
   }, [email]);
 
   const handleRoleSelected = (r) => {
     setRole(r);
+    setActiveMode(r);
     setView("home");
+  };
+
+  const handleModeSwitch = (mode) => {
+    setActiveMode(mode);
+    setView("home");
+    setSelectedJob(null);
+    setViewingApplicationsFor(null);
+    window.scrollTo(0, 0);
   };
 
   const handleSelectJob = (job, index) => {
@@ -57,7 +69,13 @@ function PostItsApp({ user, signOut }) {
   }
 
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif", background: "#fff", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{
+      fontFamily: "'Inter', sans-serif",
+      background: "#fff",
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+    }}>
       <link
         href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@400;500;600&display=swap"
         rel="stylesheet"
@@ -66,16 +84,18 @@ function PostItsApp({ user, signOut }) {
       <Navbar
         email={email}
         role={role}
+        activeMode={activeMode}
+        onModeSwitch={handleModeSwitch}
         onNavigate={handleNavigate}
         signOut={signOut}
       />
 
       <div style={{ flex: 1 }}>
-        {/* Seeker views */}
-        {role === "seeker" && view === "home" && (
+        {/* Seeker mode views */}
+        {activeMode === "seeker" && view === "home" && (
           <JobBoard onSelectJob={handleSelectJob} />
         )}
-        {role === "seeker" && view === "jobDetail" && selectedJob && (
+        {activeMode === "seeker" && view === "jobDetail" && selectedJob && (
           <JobDetail
             job={selectedJob}
             jobIndex={selectedJobIndex}
@@ -83,7 +103,7 @@ function PostItsApp({ user, signOut }) {
             onBack={goHome}
           />
         )}
-        {role === "seeker" && view === "apply" && selectedJob && (
+        {activeMode === "seeker" && view === "apply" && selectedJob && (
           <Apply
             job={selectedJob}
             userEmail={email}
@@ -91,30 +111,26 @@ function PostItsApp({ user, signOut }) {
             onSubmitted={goHome}
           />
         )}
-        {role === "seeker" && view === "becomeEmployer" && (
-          <BecomeEmployer
-            email={email}
-            onConfirm={() => { setRole("employer"); goHome(); }}
-            onBack={goHome}
-          />
-        )}
 
-        {/* Employer views */}
-        {role === "employer" && view === "home" && (
+        {/* Employer mode views */}
+        {activeMode === "employer" && view === "home" && (
           <EmployerDashboard
             employerEmail={email}
             onCreateJob={() => handleNavigate("createJob")}
-            onViewApplications={(job) => { setViewingApplicationsFor(job); setView("applications"); }}
+            onViewApplications={(job) => {
+              setViewingApplicationsFor(job);
+              setView("applications");
+            }}
           />
         )}
-        {role === "employer" && view === "createJob" && (
+        {activeMode === "employer" && view === "createJob" && (
           <CreateJob
             employerEmail={email}
             onSaved={goHome}
             onCancel={goHome}
           />
         )}
-        {role === "employer" && view === "applications" && viewingApplicationsFor && (
+        {activeMode === "employer" && view === "applications" && viewingApplicationsFor && (
           <ApplicationsView
             job={viewingApplicationsFor}
             onBack={goHome}
