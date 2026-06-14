@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import Fuse from "fuse.js";
 import { storage } from "../utils/storage";
 import PostItCard from "../components/PostItCard";
 
@@ -16,11 +17,26 @@ export default function JobBoard({ onSelectJob, userEmail }) {
   const [hidden, setHidden] = useState([]);
   const [showBookmarked, setShowBookmarked] = useState(false);
   const [showHidden, setShowHidden] = useState(false);
+  const fuseRef = useRef(null);
 
   useEffect(() => {
-    setJobs(storage.getJobs());
+    const allJobs = storage.getJobs();
+    setJobs(allJobs);
     setBookmarks(storage.getBookmarks(userEmail));
     setHidden(storage.getHidden(userEmail));
+
+    fuseRef.current = new Fuse(allJobs, {
+      keys: [
+        { name: "title", weight: 0.3 },
+        { name: "location", weight: 0.25 },
+        { name: "tags", weight: 0.2 },
+        { name: "description", weight: 0.1 },
+        { name: "type", weight: 0.1 },
+        { name: "company", weight: 0.05 },
+      ],
+      threshold: 0.4,
+      includeScore: true,
+    });
   }, [userEmail]);
 
   const handleBookmark = (jobId) => {
@@ -49,7 +65,9 @@ export default function JobBoard({ onSelectJob, userEmail }) {
     return true;
   });
 
-  const displayJobs = searched ? results.filter(j => !hidden.includes(j.id)) : visibleJobs;
+  const displayJobs = searched
+    ? results.filter(j => !hidden.includes(j.id))
+    : visibleJobs;
 
   const handleSearch = async () => {
     if (!query.trim() || loading) return;
@@ -61,6 +79,32 @@ export default function JobBoard({ onSelectJob, userEmail }) {
     setResults([]);
 
     try {
+      // Step 1: Fuse.js pre-filter
+      let candidates = [];
+      if (fuseRef.current) {
+        const fuseResults = fuseRef.current.search(query);
+        candidates = fuseResults.map(r => r.item);
+
+        // If fewer than 10 results, also search word by word
+        if (candidates.length < 10) {
+          const words = query.split(" ").filter(w => w.length > 2);
+          const seen = new Set(candidates.map(j => j.id));
+          words.forEach(word => {
+            fuseRef.current.search(word).forEach(r => {
+              if (!seen.has(r.item.id)) {
+                seen.add(r.item.id);
+                candidates.push(r.item);
+              }
+            });
+          });
+        }
+
+        candidates = candidates.slice(0, 25);
+      } else {
+        candidates = jobs.slice(0, 25);
+      }
+
+      // Step 2: Claude semantic ranking
       const response = await fetch(LAMBDA_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -73,8 +117,8 @@ export default function JobBoard({ onSelectJob, userEmail }) {
 
 User's search: "${query}"
 
-Jobs available:
-${JSON.stringify(jobs.map(j => ({
+Pre-filtered candidate jobs (rank these by relevance):
+${JSON.stringify(candidates.map(j => ({
   id: j.id,
   title: j.title,
   company: j.company,
@@ -83,22 +127,21 @@ ${JSON.stringify(jobs.map(j => ({
   commute: j.commute,
   type: j.type,
   tags: j.tags,
-  description: j.description,
-  requirements: j.requirements,
-})), null, 2)}
-
-Deeply understand what the person wants. Consider skills, location, commute, work style, salary, lifestyle.
+})), null, 0)}
 
 Return ONLY valid JSON:
-{
-  "matchedIds": ["id1", "id2"],
-  "summary": "one friendly sentence"
-}`,
+{"matchedIds": ["id1", "id2"], "summary": "one friendly sentence about what you found"}
+
+Order by best match first. Include all relevant results.`,
           }],
         }),
       });
 
       const data = await response.json();
+
+      if (data.error) throw new Error(data.error.message);
+      if (!data.content?.[0]) throw new Error("No response");
+
       const text = data.content[0].text.trim().replace(/```json|```/g, "");
       const parsed = JSON.parse(text);
 
@@ -106,11 +149,16 @@ Return ONLY valid JSON:
         .map(id => jobs.find(j => j.id === id))
         .filter(Boolean);
 
-      setResults(matched);
+      // If Claude returned nothing, fall back to Fuse results
+      setResults(matched.length > 0 ? matched : candidates);
       setSummary(parsed.summary || "");
     } catch (err) {
       console.error("Search error:", err);
-      setSummary("Search ran into an issue — try again.");
+      setSummary("Search ran into an issue — showing closest matches.");
+      // Fallback to Fuse results
+      if (fuseRef.current) {
+        setResults(fuseRef.current.search(query).slice(0, 15).map(r => r.item));
+      }
     }
 
     setLoading(false);
@@ -160,7 +208,7 @@ Return ONLY valid JSON:
         }}>
           <input
             type="text"
-            placeholder='e.g. "I want a remote job that uses Python with good pay"'
+            placeholder='e.g. "remote Python job with good pay near DC"'
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={e => {
@@ -206,15 +254,21 @@ Return ONLY valid JSON:
           </button>
         </div>
 
-        {/* Filter row */}
+        {/* Filter pills */}
         {!searched && (
           <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
             {types.map(t => (
-              <button key={t} onClick={() => { setFilter(t); setShowBookmarked(false); setShowHidden(false); }} style={{
+              <button key={t} onClick={() => {
+                setFilter(t);
+                setShowBookmarked(false);
+                setShowHidden(false);
+              }} style={{
                 padding: "7px 18px",
                 borderRadius: "20px",
-                border: filter === t && !showBookmarked && !showHidden ? "2px solid #1a1a1a" : "1.5px solid #e0e0e0",
-                background: filter === t && !showBookmarked && !showHidden ? "#1a1a1a" : "#fff",
+                border: filter === t && !showBookmarked && !showHidden
+                  ? "2px solid #1a1a1a" : "1.5px solid #e0e0e0",
+                background: filter === t && !showBookmarked && !showHidden
+                  ? "#1a1a1a" : "#fff",
                 color: filter === t && !showBookmarked && !showHidden ? "#fff" : "#555",
                 fontSize: "13px",
                 fontWeight: "600",
@@ -223,7 +277,11 @@ Return ONLY valid JSON:
                 transition: "all 0.15s ease",
               }}>{t}</button>
             ))}
-            <button onClick={() => { setShowBookmarked(!showBookmarked); setShowHidden(false); setFilter("All"); }} style={{
+            <button onClick={() => {
+              setShowBookmarked(!showBookmarked);
+              setShowHidden(false);
+              setFilter("All");
+            }} style={{
               padding: "7px 18px",
               borderRadius: "20px",
               border: showBookmarked ? "2px solid #1a1a1a" : "1.5px solid #e0e0e0",
@@ -235,7 +293,10 @@ Return ONLY valid JSON:
               fontFamily: "'Inter', sans-serif",
             }}>🔖 Saved ({bookmarks.length})</button>
             {hidden.length > 0 && (
-              <button onClick={() => { setShowHidden(!showHidden); setShowBookmarked(false); }} style={{
+              <button onClick={() => {
+                setShowHidden(!showHidden);
+                setShowBookmarked(false);
+              }} style={{
                 padding: "7px 18px",
                 borderRadius: "20px",
                 border: showHidden ? "2px solid #1a1a1a" : "1.5px solid #e0e0e0",
@@ -280,10 +341,7 @@ Return ONLY valid JSON:
               <p style={{
                 fontFamily: "'Caveat', cursive", fontSize: "24px",
                 color: "#fff", textShadow: "1px 1px 3px rgba(0,0,0,0.2)", margin: 0,
-              }}>Reading your mind…</p>
-              <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.7)", marginTop: "8px" }}>
-                Matching your query against {jobs.length} jobs
-              </p>
+              }}>Searching {jobs.length} jobs…</p>
             </div>
           )}
 
@@ -300,7 +358,9 @@ Return ONLY valid JSON:
                 color: "#fff", margin: "0 0 8px",
                 textShadow: "1px 1px 3px rgba(0,0,0,0.2)",
               }}>
-                {showBookmarked ? "No saved jobs yet." : showHidden ? "No hidden jobs." : "No jobs found."}
+                {showBookmarked ? "No saved jobs yet."
+                  : showHidden ? "No hidden jobs."
+                  : "No jobs found."}
               </p>
               {showHidden && hidden.length > 0 && (
                 <button onClick={handleUnhideAll} style={{
@@ -340,7 +400,8 @@ Return ONLY valid JSON:
                       background: "rgba(255,255,255,0.9)",
                       border: "none", borderRadius: "20px",
                       fontSize: "12px", fontWeight: "600",
-                      cursor: "pointer", fontFamily: "'Inter', sans-serif", color: "#1a1a1a",
+                      cursor: "pointer", fontFamily: "'Inter', sans-serif",
+                      color: "#1a1a1a",
                     }}>Restore all</button>
                   )}
                   {searched && (
@@ -349,7 +410,8 @@ Return ONLY valid JSON:
                       background: "rgba(255,255,255,0.2)",
                       border: "1px solid rgba(255,255,255,0.4)",
                       borderRadius: "20px", fontSize: "12px", fontWeight: "600",
-                      cursor: "pointer", fontFamily: "'Inter', sans-serif", color: "#fff",
+                      cursor: "pointer", fontFamily: "'Inter', sans-serif",
+                      color: "#fff",
                     }}>✕ Clear search</button>
                   )}
                 </div>

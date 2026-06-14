@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
+import Fuse from "fuse.js";
 import PostItCard from "./PostItCard";
 
 const LAMBDA_URL = "https://qoofy2efipnxelwsd4xz7ithfu0tdlkh.lambda-url.us-east-1.on.aws/";
-const CARD_COLORS = ["#fff9c4", "#ffd1dc", "#cce5ff", "#d4edda"];
 
-export default function AIChat({ isOpen, onClose, jobs, onSelectJob, userEmail }) {
+export default function AIChat({ isOpen, onClose, jobs, onSelectJob }) {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -16,11 +16,46 @@ export default function AIChat({ isOpen, onClose, jobs, onSelectJob, userEmail }
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
 
+  // Build Fuse index once
+  const fuse = useRef(null);
+  useEffect(() => {
+    fuse.current = new Fuse(jobs, {
+      keys: [
+        { name: "title", weight: 0.3 },
+        { name: "company", weight: 0.1 },
+        { name: "location", weight: 0.2 },
+        { name: "tags", weight: 0.2 },
+        { name: "description", weight: 0.1 },
+        { name: "type", weight: 0.1 },
+      ],
+      threshold: 0.4,
+      includeScore: true,
+    });
+  }, [jobs]);
+
   useEffect(() => {
     if (bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
+
+  const preFilterJobs = (query) => {
+    if (!fuse.current) return jobs.slice(0, 20);
+    const results = fuse.current.search(query);
+    if (results.length < 5) {
+      // Fallback: also search individual words
+      const words = query.split(" ").filter(w => w.length > 2);
+      const wordResults = words.flatMap(w => fuse.current.search(w));
+      const seen = new Set(results.map(r => r.item.id));
+      wordResults.forEach(r => {
+        if (!seen.has(r.item.id)) {
+          seen.add(r.item.id);
+          results.push(r);
+        }
+      });
+    }
+    return results.slice(0, 25).map(r => r.item);
+  };
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
@@ -28,10 +63,15 @@ export default function AIChat({ isOpen, onClose, jobs, onSelectJob, userEmail }
     const userMessage = { role: "user", content: input };
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
+    const currentInput = input;
     setInput("");
     setLoading(true);
 
     try {
+      // Step 1: Fuse.js pre-filter
+      const candidates = preFilterJobs(currentInput);
+
+      // Step 2: Claude ranks and responds
       const conversationHistory = newMessages.map(m => ({
         role: m.role,
         content: m.content,
@@ -43,16 +83,15 @@ export default function AIChat({ isOpen, onClose, jobs, onSelectJob, userEmail }
         body: JSON.stringify({
           model: "claude-haiku-4-5-20251001",
           max_tokens: 1024,
-          system: `You are a friendly and helpful job search assistant for Post-Its, a recruitment platform. Your ONLY purpose is to help users find jobs that match their needs from the available listings.
+          system: `You are a friendly job search assistant for Post-Its. Your ONLY purpose is to help users find jobs.
 
 STRICT RULES:
-- You can ONLY discuss job search, careers, job matching, resume tips, and interview advice
-- If asked about ANYTHING else (food, weather, sports, general knowledge, politics, etc.), respond with: "I'm only here to help with your job search! What kind of role are you looking for?"
-- Never break character or discuss topics outside of job searching
-- Be warm, encouraging, and specific in your recommendations
+- Only discuss job search, careers, job matching, resume tips, and interview advice
+- If asked about ANYTHING else, say exactly: "I'm only here to help with your job search! What kind of role are you looking for?"
+- Always return valid JSON — never plain text
 
-Available jobs on Post-Its:
-${JSON.stringify(jobs.map(j => ({
+These are the most relevant jobs for this query (pre-filtered for you):
+${JSON.stringify(candidates.map(j => ({
   id: j.id,
   title: j.title,
   company: j.company,
@@ -61,28 +100,21 @@ ${JSON.stringify(jobs.map(j => ({
   commute: j.commute,
   type: j.type,
   tags: j.tags,
-  description: j.description,
-})
-), null, 2)}
+})), null, 0)}
 
-When recommending jobs, always return a JSON response in this EXACT format:
-{
-  "message": "Your conversational response here",
-  "recommendedIds": ["seed-1", "seed-5"]
-}
+Always respond in this EXACT JSON format:
+{"message": "your friendly response here", "recommendedIds": ["id1", "id2"]}
 
-If not recommending specific jobs, use:
-{
-  "message": "Your conversational response here", 
-  "recommendedIds": []
-}
-
-ALWAYS return valid JSON. Never return plain text.`,
+If not recommending jobs: {"message": "your response", "recommendedIds": []}`,
           messages: conversationHistory,
         }),
       });
 
       const data = await response.json();
+
+      if (data.error) throw new Error(data.error.message || "API error");
+      if (!data.content?.[0]) throw new Error("No response from AI");
+
       const text = data.content[0].text.trim().replace(/```json|```/g, "");
 
       let parsed;
@@ -125,7 +157,7 @@ ALWAYS return valid JSON. Never return plain text.`,
       background: "#fff",
       fontFamily: "'Inter', sans-serif",
     }}>
-      {/* Chat header */}
+      {/* Header */}
       <div style={{
         display: "flex",
         alignItems: "center",
@@ -148,10 +180,17 @@ ALWAYS return valid JSON. Never return plain text.`,
             fontWeight: "700",
           }}>📌</span>
           <div>
-            <div style={{ fontFamily: "'Caveat', cursive", fontSize: "22px", fontWeight: "700", color: "#1a1a1a" }}>
+            <div style={{
+              fontFamily: "'Caveat', cursive",
+              fontSize: "22px",
+              fontWeight: "700",
+              color: "#1a1a1a",
+            }}>
               Post-Its AI Assistant
             </div>
-            <div style={{ fontSize: "12px", color: "#888" }}>Job search help only</div>
+            <div style={{ fontSize: "12px", color: "#888" }}>
+              Job search help only · {jobs.length} jobs indexed
+            </div>
           </div>
         </div>
         <button onClick={onClose} style={{
@@ -165,7 +204,7 @@ ALWAYS return valid JSON. Never return plain text.`,
         }}>✕</button>
       </div>
 
-      {/* Messages + job results */}
+      {/* Messages */}
       <div style={{
         flex: 1,
         overflowY: "auto",
@@ -176,7 +215,6 @@ ALWAYS return valid JSON. Never return plain text.`,
       }}>
         {messages.map((msg, i) => (
           <div key={i}>
-            {/* Message bubble */}
             <div style={{
               display: "flex",
               justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
@@ -185,7 +223,9 @@ ALWAYS return valid JSON. Never return plain text.`,
               <div style={{
                 maxWidth: "70%",
                 padding: "12px 16px",
-                borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                borderRadius: msg.role === "user"
+                  ? "16px 16px 4px 16px"
+                  : "16px 16px 16px 4px",
                 background: msg.role === "user" ? "#1a1a1a" : "#f5f5f5",
                 color: msg.role === "user" ? "#fff" : "#1a1a1a",
                 fontSize: "14px",
@@ -195,10 +235,14 @@ ALWAYS return valid JSON. Never return plain text.`,
               </div>
             </div>
 
-            {/* Recommended post-it cards */}
             {msg.jobs?.length > 0 && (
               <div>
-                <p style={{ fontSize: "12px", color: "#aaa", margin: "0 0 12px", fontWeight: "600" }}>
+                <p style={{
+                  fontSize: "12px",
+                  color: "#aaa",
+                  margin: "0 0 12px",
+                  fontWeight: "600",
+                }}>
                   RECOMMENDED ROLES
                 </p>
                 <div style={{
@@ -234,7 +278,7 @@ ALWAYS return valid JSON. Never return plain text.`,
               color: "#888",
               fontSize: "14px",
             }}>
-              ✨ Thinking…
+              ✨ Searching {jobs.length} jobs…
             </div>
           </div>
         )}
