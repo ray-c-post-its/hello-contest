@@ -9,7 +9,7 @@ export default function SwipeJobs({ userEmail, onSelectJob, onBack }) {
   const [index, setIndex] = useState(0);
   const [liked, setLiked] = useState([]);
   const [passed, setPassed] = useState([]);
-  const [animating, setAnimating] = useState(null); // 'left' | 'right' | null
+  const [animating, setAnimating] = useState(null);
   const [done, setDone] = useState(false);
 
   useEffect(() => {
@@ -21,12 +21,11 @@ export default function SwipeJobs({ userEmail, onSelectJob, onBack }) {
     setJobs(all);
   }, [userEmail]);
 
-  const current = jobs[index];
-  const bg = CARD_COLORS[index % CARD_COLORS.length];
-  const rot = ROTATIONS[index % ROTATIONS.length];
-
   const handleSwipe = (direction) => {
-    if (animating) return;
+    if (animating || done) return;
+    const current = jobs[index];
+    if (!current) return;
+
     setAnimating(direction);
 
     setTimeout(() => {
@@ -46,6 +45,15 @@ export default function SwipeJobs({ userEmail, onSelectJob, onBack }) {
       setAnimating(null);
     }, 300);
   };
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "ArrowRight") handleSwipe("right");
+      if (e.key === "ArrowLeft") handleSwipe("left");
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [index, animating, jobs, done]);
 
   if (jobs.length === 0) {
     return (
@@ -98,6 +106,10 @@ export default function SwipeJobs({ userEmail, onSelectJob, onBack }) {
     );
   }
 
+  const current = jobs[index];
+  const bg = CARD_COLORS[index % CARD_COLORS.length];
+  const rot = ROTATIONS[index % ROTATIONS.length];
+
   return (
     <div style={{
       fontFamily: "'Inter', sans-serif",
@@ -123,16 +135,12 @@ export default function SwipeJobs({ userEmail, onSelectJob, onBack }) {
 
         {/* Progress bar */}
         <div style={{
-          maxWidth: "300px",
-          margin: "0 auto",
-          height: "4px",
-          background: "#f0f0f0",
-          borderRadius: "2px",
-          overflow: "hidden",
+          maxWidth: "300px", margin: "0 auto", height: "4px",
+          background: "#f0f0f0", borderRadius: "2px", overflow: "hidden",
         }}>
           <div style={{
             height: "100%",
-            width: `${((index) / jobs.length) * 100}%`,
+            width: `${(index / jobs.length) * 100}%`,
             background: "#1a1a1a",
             borderRadius: "2px",
             transition: "width 0.3s ease",
@@ -147,28 +155,31 @@ export default function SwipeJobs({ userEmail, onSelectJob, onBack }) {
         alignItems: "center",
         padding: "48px 24px",
       }}>
-        <div style={{
-          width: "100%",
-          maxWidth: "420px",
-          background: bg,
-          borderRadius: "3px",
-          padding: "32px",
-          boxShadow: animating === "right"
-            ? "12px 12px 30px rgba(0,200,0,0.2)"
-            : animating === "left"
-              ? "12px 12px 30px rgba(200,0,0,0.2)"
-              : "4px 4px 16px rgba(0,0,0,0.12)",
-          transform: animating === "right"
-            ? "rotate(8deg) translateX(60px) translateY(-20px)"
-            : animating === "left"
-              ? "rotate(-8deg) translateX(-60px) translateY(-20px)"
-              : `rotate(${rot}deg)`,
-          transition: animating ? "transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease" : "none",
-          opacity: animating ? 0 : 1,
-          position: "relative",
-          cursor: "pointer",
-        }}
+        <div
           onClick={() => onSelectJob(current, index)}
+          style={{
+            width: "100%",
+            maxWidth: "420px",
+            background: bg,
+            borderRadius: "3px",
+            padding: "32px",
+            boxShadow: animating === "right"
+              ? "12px 12px 30px rgba(0,200,0,0.2)"
+              : animating === "left"
+                ? "12px 12px 30px rgba(200,0,0,0.2)"
+                : "4px 4px 16px rgba(0,0,0,0.12)",
+            transform: animating === "right"
+              ? "rotate(8deg) translateX(60px) translateY(-20px)"
+              : animating === "left"
+                ? "rotate(-8deg) translateX(-60px) translateY(-20px)"
+                : `rotate(${rot}deg)`,
+            transition: animating
+              ? "transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease"
+              : "none",
+            opacity: animating ? 0 : 1,
+            position: "relative",
+            cursor: "pointer",
+          }}
         >
           {/* Pin */}
           <div style={{
@@ -225,17 +236,17 @@ export default function SwipeJobs({ userEmail, onSelectJob, onBack }) {
             fontWeight: "700", color: "#1a1a1a", marginTop: "14px",
           }}>{current.salary}</div>
 
-          <p style={{ fontSize: "11px", color: "#aaa", textAlign: "center", marginTop: "16px", marginBottom: 0 }}>
+          <p style={{
+            fontSize: "11px", color: "#aaa", textAlign: "center",
+            marginTop: "16px", marginBottom: 0,
+          }}>
             Tap card to view full details
           </p>
         </div>
 
         {/* Swipe buttons */}
         <div style={{
-          display: "flex",
-          gap: "32px",
-          marginTop: "40px",
-          alignItems: "center",
+          display: "flex", gap: "32px", marginTop: "40px", alignItems: "center",
         }}>
           <button
             onClick={() => handleSwipe("left")}
@@ -249,9 +260,7 @@ export default function SwipeJobs({ userEmail, onSelectJob, onBack }) {
             }}
             onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
             onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-          >
-            ✕
-          </button>
+          >✕</button>
 
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: "12px", color: "#bbb", marginBottom: "4px" }}>pass / save</div>
@@ -273,24 +282,13 @@ export default function SwipeJobs({ userEmail, onSelectJob, onBack }) {
             }}
             onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
             onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-          >
-            🔖
-          </button>
+          >🔖</button>
         </div>
 
-        {/* Keyboard hint */}
         <p style={{ fontSize: "12px", color: "#ccc", marginTop: "16px" }}>
           You can also use ← → arrow keys
         </p>
       </div>
-useEffect(() => {
-  const handleKey = (e) => {
-    if (e.key === "ArrowRight") handleSwipe("right");
-    if (e.key === "ArrowLeft") handleSwipe("left");
-  };
-  window.addEventListener("keydown", handleKey);
-  return () => window.removeEventListener("keydown", handleKey);
-}, [index, animating, jobs]);
     </div>
   );
 }
