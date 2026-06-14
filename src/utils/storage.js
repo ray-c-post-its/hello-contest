@@ -2,6 +2,8 @@ const KEYS = {
   jobs: "postits_jobs",
   applications: "postits_applications",
   userRoles: "postits_user_roles",
+  bookmarks: "postits_bookmarks",
+  hidden: "postits_hidden",
 };
 
 const SEED_JOBS = [
@@ -156,7 +158,6 @@ const SEED_JOBS = [
     employerEmail: "demo@dupontcircle.com",
     postedAt: new Date().toISOString(),
   },
-  // Virginia
   {
     id: "seed-11",
     title: "Cloud Architect",
@@ -361,7 +362,7 @@ const SEED_JOBS = [
     commute: "~10 min from DC",
     type: "Hybrid",
     tags: ["Robotics", "ROS", "Computer Vision", "C++"],
-    description: "Push the boundaries of robotics technology on DARPA-funded research programs. Work on the bleeding edge of autonomous systems.",
+    description: "Push the boundaries of robotics technology on DARPA-funded research programs.",
     requirements: "PhD in robotics or related field\nStrong ROS and C++ skills\nActive secret clearance preferred\nStrong publication record",
     imageUrl: "",
     employerEmail: "demo@darpacontractor.com",
@@ -391,7 +392,7 @@ const SEED_JOBS = [
     commute: "~10 min from DC",
     type: "Hybrid",
     tags: ["React", "TypeScript", "CSS", "Performance"],
-    description: "Build the digital products powering one of DC's most innovative media companies. Work on products read by millions.",
+    description: "Build the digital products powering one of DC's most innovative media companies.",
     requirements: "4+ years of frontend development\nStrong React and TypeScript skills\nPerformance optimization experience\nMedia industry interest",
     imageUrl: "",
     employerEmail: "demo@axioshq.com",
@@ -421,7 +422,7 @@ const SEED_JOBS = [
     commute: "~30 min from DC",
     type: "Hybrid",
     tags: ["SOC", "Incident Response", "Splunk", "Security Clearance"],
-    description: "Monitor and respond to cybersecurity threats for critical government infrastructure in a 24/7 SOC environment.",
+    description: "Monitor and respond to cybersecurity threats for critical government infrastructure.",
     requirements: "Active TS/SCI clearance required\n3+ years of SOC experience\nStrong Splunk skills\nCEH or Security+ certification",
     imageUrl: "",
     employerEmail: "demo@peraton.com",
@@ -436,7 +437,7 @@ const SEED_JOBS = [
     commute: "~25 min from DC",
     type: "On-site",
     tags: ["GIS", "Remote Sensing", "GEOINT", "ArcGIS"],
-    description: "Analyze geospatial intelligence to support national security missions at the National Geospatial-Intelligence Agency.",
+    description: "Analyze geospatial intelligence to support national security missions.",
     requirements: "Active TS/SCI clearance required\n4+ years of GEOINT experience\nStrong ArcGIS skills\nRemote sensing experience",
     imageUrl: "",
     employerEmail: "demo@ngacontractor.com",
@@ -451,13 +452,12 @@ const SEED_JOBS = [
     commute: "~20 min from DC",
     type: "Hybrid",
     tags: ["Cybersecurity", "Vulnerability Research", "MITRE ATT&CK"],
-    description: "Advance national cybersecurity at a Federally Funded R&D Center. Work on research that shapes global cyber defense.",
+    description: "Advance national cybersecurity at a Federally Funded R&D Center.",
     requirements: "5+ years of cybersecurity experience\nActive TS/SCI clearance preferred\nVulnerability research experience\nStrong reverse engineering skills",
     imageUrl: "",
     employerEmail: "demo@mitre.org",
     postedAt: new Date().toISOString(),
   },
-  // Maryland
   {
     id: "seed-31",
     title: "Data Analyst",
@@ -467,7 +467,7 @@ const SEED_JOBS = [
     commute: "~15 min from DC",
     type: "Hybrid",
     tags: ["Python", "SQL", "Tableau"],
-    description: "Support health outcomes research with federal data. Short commute from most of DC with parking available.",
+    description: "Support health outcomes research with federal data. Short commute from most of DC.",
     requirements: "2+ years of data analysis experience\nProficiency in Python and SQL\nExperience with Tableau\nHealthcare experience a plus",
     imageUrl: "",
     employerEmail: "demo@nihcontractor.com",
@@ -542,7 +542,7 @@ const SEED_JOBS = [
     commute: "~45 min from DC",
     type: "Hybrid",
     tags: ["Environmental Science", "Water Quality", "GIS"],
-    description: "Monitor and protect the Chesapeake Bay ecosystem. Conduct field research and analyze environmental data.",
+    description: "Monitor and protect the Chesapeake Bay ecosystem.",
     requirements: "3+ years of environmental science experience\nStrong GIS skills\nWater quality monitoring experience\nMS in environmental science preferred",
     imageUrl: "",
     employerEmail: "demo@epachesapeake.com",
@@ -632,7 +632,7 @@ const SEED_JOBS = [
     commute: "~45 min from DC",
     type: "Hybrid",
     tags: ["Swift", "iOS", "HealthKit"],
-    description: "Build health monitoring apps that improve patient outcomes and make a real difference in people's lives.",
+    description: "Build health monitoring apps that improve patient outcomes.",
     requirements: "4+ years of iOS development\nStrong Swift skills\nHealthKit experience preferred\nHIPAA compliance knowledge",
     imageUrl: "",
     employerEmail: "demo@tegrityhealth.com",
@@ -662,13 +662,12 @@ const SEED_JOBS = [
     commute: "~25 min from DC",
     type: "Hybrid",
     tags: ["Sales", "Biotechnology", "Life Sciences"],
-    description: "Sell life science research products to leading biotech and pharmaceutical companies in the DC corridor.",
+    description: "Sell life science research products to leading biotech companies in the DC corridor.",
     requirements: "3+ years of life science sales experience\nBiology or chemistry degree preferred\nStrong relationship-building skills\nTrack record of exceeding quota",
     imageUrl: "",
     employerEmail: "demo@thermofisher.com",
     postedAt: new Date().toISOString(),
   },
-  // More DC Area
   {
     id: "seed-45",
     title: "Graphic Designer",
@@ -693,8 +692,8 @@ const SEED_JOBS = [
     commute: "Metro accessible",
     type: "Hybrid",
     tags: ["Government Contracts Law", "Litigation", "FAR"],
-    description: "Advise defense contractors and technology companies on complex government contracting legal matters.",
-    requirements: "JD from top law school\nActive DC bar license\n3+ years of government contracts law experience\nStrong writing and advocacy skills",
+    description: "Advise defense contractors on complex government contracting legal matters.",
+    requirements: "JD from top law school\nActive DC bar license\n3+ years of government contracts law\nStrong writing and advocacy skills",
     imageUrl: "",
     employerEmail: "demo@wileyrein.com",
     postedAt: new Date().toISOString(),
@@ -708,7 +707,7 @@ const SEED_JOBS = [
     commute: "Metro accessible",
     type: "Hybrid",
     tags: ["Economics", "Monetary Policy", "Research"],
-    description: "Conduct economic research to inform Federal Reserve monetary policy alongside world-class economists.",
+    description: "Conduct economic research to inform Federal Reserve monetary policy.",
     requirements: "PhD in economics required\nStrong econometrics skills\nMacroeconomics research experience\nPublication record preferred",
     imageUrl: "",
     employerEmail: "demo@federalreserve.gov",
@@ -813,7 +812,7 @@ const SEED_JOBS = [
     commute: "Metro accessible",
     type: "On-site",
     tags: ["Veterinary Medicine", "Zoo Medicine", "Wildlife"],
-    description: "Provide veterinary care for one of the world's most diverse animal collections at the Smithsonian National Zoo.",
+    description: "Provide veterinary care for one of the world's most diverse animal collections.",
     requirements: "DVM degree required\nActive DC veterinary license\nZoo or wildlife medicine experience\nBoard certification preferred",
     imageUrl: "",
     employerEmail: "demo@nationalzoo.com",
@@ -828,7 +827,7 @@ const SEED_JOBS = [
     commute: "Metro accessible",
     type: "Hybrid",
     tags: ["Event Planning", "Venue Management", "Logistics"],
-    description: "Plan and execute world-class events at the Smithsonian's iconic venues across DC.",
+    description: "Plan and execute world-class events at the Smithsonian's iconic venues.",
     requirements: "3+ years of event planning experience\nCMP certification preferred\nVenue management experience\nBudget management skills",
     imageUrl: "",
     employerEmail: "demo@smithsonian.com",
@@ -843,7 +842,7 @@ const SEED_JOBS = [
     commute: "Metro accessible",
     type: "On-site",
     tags: ["Physical Therapy", "Orthopedics", "Sports Medicine"],
-    description: "Provide physical therapy services to diverse patient populations at a leading academic medical center.",
+    description: "Provide physical therapy services at a leading academic medical center.",
     requirements: "DPT degree required\nActive DC PT license\nOrthopedic experience preferred\nSports medicine background a plus",
     imageUrl: "",
     employerEmail: "demo@medstargeorgetown.com",
@@ -888,7 +887,7 @@ const SEED_JOBS = [
     commute: "Metro accessible",
     type: "Hybrid",
     tags: ["Management Consulting", "Strategy", "Federal"],
-    description: "Solve the most complex challenges facing government and nonprofit clients at the world's premier consulting firm.",
+    description: "Solve the most complex challenges facing government and nonprofit clients.",
     requirements: "MBA from top program\nStrong analytical skills\nFederal sector experience preferred\nExceptional communication abilities",
     imageUrl: "",
     employerEmail: "demo@mckinsey.com",
@@ -904,7 +903,7 @@ const SEED_JOBS = [
     type: "Hybrid",
     tags: ["Photography", "Journalism", "Visual Storytelling"],
     description: "Capture the defining images of our time for one of America's most important newspapers.",
-    requirements: "5+ years of professional photojournalism experience\nStrong portfolio of published work\nBreaking news experience\nVideo skills a plus",
+    requirements: "5+ years of professional photojournalism\nStrong portfolio of published work\nBreaking news experience\nVideo skills a plus",
     imageUrl: "",
     employerEmail: "demo@washingtonpost.com",
     postedAt: new Date().toISOString(),
@@ -918,7 +917,7 @@ const SEED_JOBS = [
     commute: "Metro accessible",
     type: "Hybrid",
     tags: ["Treasury", "Financial Analysis", "Federal Finance"],
-    description: "Support critical financial operations at the Department of the Treasury with national economic impact.",
+    description: "Support critical financial operations at the Department of the Treasury.",
     requirements: "3+ years of financial analysis experience\nFederal finance experience preferred\nStrong Excel skills\nCPA or CFA preferred",
     imageUrl: "",
     employerEmail: "demo@treasury.gov",
@@ -963,7 +962,7 @@ const SEED_JOBS = [
     commute: "Metro accessible",
     type: "On-site",
     tags: ["Legislative Affairs", "Policy Research", "Capitol Hill"],
-    description: "Support a US Senator with legislative research, constituent services, and policy development.",
+    description: "Support a US Senator with legislative research and policy development.",
     requirements: "Bachelor's degree required\nCapitol Hill experience preferred\nStrong research and writing skills\nPassion for public service",
     imageUrl: "",
     employerEmail: "demo@senate.gov",
@@ -993,7 +992,7 @@ const SEED_JOBS = [
     commute: "Metro accessible",
     type: "On-site",
     tags: ["Dentistry", "General Dentistry", "Patient Care"],
-    description: "Join a growing dental practice serving DC's diverse communities with modern technology and great work-life balance.",
+    description: "Join a growing dental practice serving DC's diverse communities.",
     requirements: "DDS or DMD degree required\nActive DC dental license\n2+ years of general dentistry experience\nStrong patient communication skills",
     imageUrl: "",
     employerEmail: "demo@dcsmilesgroup.com",
@@ -1008,8 +1007,8 @@ const SEED_JOBS = [
     commute: "Metro accessible",
     type: "Hybrid",
     tags: ["Sustainability", "LEED", "ESG", "Green Building"],
-    description: "Lead sustainability initiatives for a portfolio of premier commercial real estate assets in the DC market.",
-    requirements: "LEED AP certification required\n5+ years of sustainability management experience\nESG reporting experience\nStrong stakeholder management skills",
+    description: "Lead sustainability initiatives for a portfolio of premier commercial real estate assets.",
+    requirements: "LEED AP certification required\n5+ years of sustainability management\nESG reporting experience\nStrong stakeholder management skills",
     imageUrl: "",
     employerEmail: "demo@jlldc.com",
     postedAt: new Date().toISOString(),
@@ -1023,7 +1022,7 @@ const SEED_JOBS = [
     commute: "Metro accessible",
     type: "Hybrid",
     tags: ["AI Policy", "Research", "Technology Policy"],
-    description: "Research the national security implications of artificial intelligence at Georgetown's premier tech policy think tank.",
+    description: "Research the national security implications of AI at Georgetown's premier tech policy think tank.",
     requirements: "Master's or PhD in relevant field\n3+ years of policy research experience\nTechnology policy background\nStrong writing and analytical skills",
     imageUrl: "",
     employerEmail: "demo@cset.georgetown.edu",
@@ -1038,7 +1037,7 @@ const SEED_JOBS = [
     commute: "~15 min from DC",
     type: "On-site",
     tags: ["Psychology", "PTSD", "Military Mental Health"],
-    description: "Provide psychological services to active duty military and veterans at the nation's premier military medical center.",
+    description: "Provide psychological services to active duty military and veterans.",
     requirements: "PhD or PsyD in clinical psychology\nActive Maryland license\nMilitary or VA experience preferred\nPTSD treatment specialization",
     imageUrl: "",
     employerEmail: "demo@walterreed.com",
@@ -1059,7 +1058,6 @@ const SEED_JOBS = [
     employerEmail: "demo@genslerdc.com",
     postedAt: new Date().toISOString(),
   },
-  // Remote
   {
     id: "seed-71",
     title: "Full Stack Developer",
@@ -1069,8 +1067,8 @@ const SEED_JOBS = [
     commute: "No commute",
     type: "Remote",
     tags: ["React", "Python", "PostgreSQL"],
-    description: "Build products used by millions of users. Work fully remote with a tight-knit team that values autonomy and impact.",
-    requirements: "4+ years of full stack development\nStrong React and Python skills\nPostgreSQL or similar database experience\nRemote work experience preferred",
+    description: "Build products used by millions of users. Work fully remote with a tight-knit team.",
+    requirements: "4+ years of full stack development\nStrong React and Python skills\nPostgreSQL experience\nRemote work experience preferred",
     imageUrl: "",
     employerEmail: "demo@techforward.com",
     postedAt: new Date().toISOString(),
@@ -1084,7 +1082,7 @@ const SEED_JOBS = [
     commute: "No commute",
     type: "Remote",
     tags: ["Content Strategy", "SEO", "Editorial"],
-    description: "Shape content strategy for a fast-growing digital media company. Lead editorial direction and drive organic growth.",
+    description: "Shape content strategy for a fast-growing digital media company.",
     requirements: "4+ years of content strategy experience\nStrong SEO knowledge\nEditorial leadership experience\nExcellent writing skills",
     imageUrl: "",
     employerEmail: "demo@digitalmediaco.com",
@@ -1099,7 +1097,7 @@ const SEED_JOBS = [
     commute: "No commute",
     type: "Remote",
     tags: ["Customer Success", "SaaS", "Account Management"],
-    description: "Help enterprise customers get maximum value from our platform. Build long-term relationships and drive retention.",
+    description: "Help enterprise customers get maximum value from our platform.",
     requirements: "3+ years of customer success experience\nSaaS account management background\nStrong communication skills\nExperience with Salesforce or HubSpot",
     imageUrl: "",
     employerEmail: "demo@saasplatform.com",
@@ -1114,7 +1112,7 @@ const SEED_JOBS = [
     commute: "No commute",
     type: "Remote",
     tags: ["Spark", "Airflow", "dbt", "Snowflake"],
-    description: "Build and maintain data pipelines that power business intelligence across the organization.",
+    description: "Build and maintain data pipelines that power business intelligence.",
     requirements: "4+ years of data engineering experience\nStrong Spark and Airflow skills\nSnowflake or BigQuery experience\ndbt proficiency preferred",
     imageUrl: "",
     employerEmail: "demo@remotedatalabs.com",
@@ -1135,7 +1133,6 @@ const SEED_JOBS = [
     employerEmail: "demo@talentsearch.com",
     postedAt: new Date().toISOString(),
   },
-  // New York
   {
     id: "seed-76",
     title: "Investment Banking Analyst",
@@ -1145,8 +1142,8 @@ const SEED_JOBS = [
     commute: "Subway accessible",
     type: "On-site",
     tags: ["Investment Banking", "Financial Modeling", "M&A"],
-    description: "Join one of Wall Street's most prestigious banks. Work on high-profile M&A and capital markets transactions.",
-    requirements: "Bachelor's degree in finance or related field\nStrong financial modeling skills\nExcellent analytical abilities\nHigh tolerance for demanding hours",
+    description: "Join one of Wall Street's most prestigious banks on high-profile transactions.",
+    requirements: "Bachelor's degree in finance\nStrong financial modeling skills\nExcellent analytical abilities\nHigh tolerance for demanding hours",
     imageUrl: "",
     employerEmail: "demo@goldmansachs.com",
     postedAt: new Date().toISOString(),
@@ -1160,7 +1157,7 @@ const SEED_JOBS = [
     commute: "Subway accessible",
     type: "Hybrid",
     tags: ["UX Research", "Usability Testing", "Qualitative Research"],
-    description: "Lead user research across a portfolio of consumer products. Build the research practice and mentor junior researchers.",
+    description: "Lead user research across a portfolio of consumer products.",
     requirements: "6+ years of UX research experience\nStrong qualitative and quantitative methods\nTeam leadership experience\nPortfolio of research case studies",
     imageUrl: "",
     employerEmail: "demo@nyctechstudio.com",
@@ -1190,7 +1187,7 @@ const SEED_JOBS = [
     commute: "Subway accessible",
     type: "Hybrid",
     tags: ["Media Planning", "Digital Advertising", "Analytics"],
-    description: "Plan and execute media campaigns for Fortune 500 clients at one of the world's top advertising agencies.",
+    description: "Plan and execute media campaigns for Fortune 500 clients.",
     requirements: "2+ years of media planning experience\nStrong analytical skills\nDigital advertising knowledge\nExperience with media planning tools",
     imageUrl: "",
     employerEmail: "demo@publicismedia.com",
@@ -1211,7 +1208,6 @@ const SEED_JOBS = [
     employerEmail: "demo@som.com",
     postedAt: new Date().toISOString(),
   },
-  // Boston
   {
     id: "seed-81",
     title: "Biotech Research Scientist",
@@ -1222,7 +1218,7 @@ const SEED_JOBS = [
     type: "On-site",
     tags: ["mRNA", "Molecular Biology", "R&D"],
     description: "Advance cutting-edge mRNA therapeutics at one of biotech's most innovative companies.",
-    requirements: "PhD in molecular biology or related field\n3+ years of industry R&D experience\nStrong mRNA or vaccine experience\nPublished research record",
+    requirements: "PhD in molecular biology\n3+ years of industry R&D experience\nStrong mRNA or vaccine experience\nPublished research record",
     imageUrl: "",
     employerEmail: "demo@modernacambridge.com",
     postedAt: new Date().toISOString(),
@@ -1236,8 +1232,8 @@ const SEED_JOBS = [
     commute: "T accessible",
     type: "Hybrid",
     tags: ["AI", "PyTorch", "NLP", "Python"],
-    description: "Build AI-powered products at a cutting-edge MIT spinout. Turn world-class research into real product.",
-    requirements: "4+ years of ML engineering experience\nStrong PyTorch skills\nNLP or computer vision background\nPublications or open source contributions a plus",
+    description: "Build AI-powered products at a cutting-edge MIT spinout.",
+    requirements: "4+ years of ML engineering experience\nStrong PyTorch skills\nNLP or computer vision background\nPublications or open source a plus",
     imageUrl: "",
     employerEmail: "demo@mitcsail.com",
     postedAt: new Date().toISOString(),
@@ -1251,7 +1247,7 @@ const SEED_JOBS = [
     commute: "T accessible",
     type: "Hybrid",
     tags: ["Financial Planning", "CFP", "Wealth Management"],
-    description: "Help individuals and families achieve their financial goals at one of America's largest investment firms.",
+    description: "Help individuals and families achieve their financial goals.",
     requirements: "CFP certification required\n3+ years of financial planning experience\nStrong client relationship skills\nSeries 7 and 66 licenses",
     imageUrl: "",
     employerEmail: "demo@fidelity.com",
@@ -1266,7 +1262,7 @@ const SEED_JOBS = [
     commute: "T accessible",
     type: "Hybrid",
     tags: ["Healthcare Consulting", "Strategy", "Analytics"],
-    description: "Advise leading healthcare organizations on strategy, operations, and digital transformation.",
+    description: "Advise leading healthcare organizations on strategy and digital transformation.",
     requirements: "MBA from top program\n3+ years of consulting experience\nHealthcare industry knowledge\nStrong analytical and communication skills",
     imageUrl: "",
     employerEmail: "demo@bcgboston.com",
@@ -1281,13 +1277,12 @@ const SEED_JOBS = [
     commute: "Cape Cod area",
     type: "On-site",
     tags: ["Marine Biology", "Field Research", "Oceanography"],
-    description: "Conduct groundbreaking research on marine ecosystems at one of the world's premier oceanographic institutions.",
-    requirements: "PhD in marine biology or related field\nField research experience\nStrong publication record\nGrant writing experience preferred",
+    description: "Conduct groundbreaking research on marine ecosystems.",
+    requirements: "PhD in marine biology\nField research experience\nStrong publication record\nGrant writing experience preferred",
     imageUrl: "",
     employerEmail: "demo@whoi.com",
     postedAt: new Date().toISOString(),
   },
-  // Philadelphia
   {
     id: "seed-86",
     title: "Pharmacist",
@@ -1312,8 +1307,8 @@ const SEED_JOBS = [
     commute: "SEPTA accessible",
     type: "Hybrid",
     tags: ["Scala", "Kafka", "Spark", "AWS"],
-    description: "Build data infrastructure powering one of America's largest media and technology companies.",
-    requirements: "4+ years of data engineering experience\nStrong Scala and Spark skills\nKafka streaming experience\nCloud platform expertise",
+    description: "Build data infrastructure powering one of America's largest media companies.",
+    requirements: "4+ years of data engineering\nStrong Scala and Spark skills\nKafka streaming experience\nCloud platform expertise",
     imageUrl: "",
     employerEmail: "demo@comcasttech.com",
     postedAt: new Date().toISOString(),
@@ -1327,7 +1322,7 @@ const SEED_JOBS = [
     commute: "SEPTA accessible",
     type: "Hybrid",
     tags: ["Urban Planning", "GIS", "Zoning"],
-    description: "Shape the future of Philadelphia through thoughtful urban planning and community development.",
+    description: "Shape the future of Philadelphia through thoughtful urban planning.",
     requirements: "Master's in urban planning\n3+ years of municipal planning experience\nStrong GIS skills\nCommunity engagement experience",
     imageUrl: "",
     employerEmail: "demo@philaplanning.com",
@@ -1342,7 +1337,7 @@ const SEED_JOBS = [
     commute: "SEPTA accessible",
     type: "On-site",
     tags: ["Social Work", "Pediatrics", "Case Management"],
-    description: "Support children and families navigating complex medical situations at one of the world's top pediatric hospitals.",
+    description: "Support children and families navigating complex medical situations.",
     requirements: "MSW required\nLCSW or LSW license in Pennsylvania\nPediatric social work experience preferred\nStrong crisis intervention skills",
     imageUrl: "",
     employerEmail: "demo@chop.com",
@@ -1357,13 +1352,12 @@ const SEED_JOBS = [
     commute: "SEPTA accessible",
     type: "Hybrid",
     tags: ["Marketing Analytics", "Google Analytics", "Data Visualization"],
-    description: "Analyze marketing performance and drive data-driven decisions for a growing creative agency.",
+    description: "Analyze marketing performance and drive data-driven decisions.",
     requirements: "2+ years of marketing analytics experience\nStrong Google Analytics skills\nData visualization proficiency\nExcellent presentation skills",
     imageUrl: "",
     employerEmail: "demo@dayoneagency.com",
     postedAt: new Date().toISOString(),
   },
-  // Atlanta
   {
     id: "seed-91",
     title: "Software Engineer — Backend",
@@ -1373,7 +1367,7 @@ const SEED_JOBS = [
     commute: "MARTA accessible",
     type: "Hybrid",
     tags: ["Java", "Spring Boot", "Microservices"],
-    description: "Build payment and commerce platforms used by retailers worldwide. Work on high-throughput systems.",
+    description: "Build payment and commerce platforms used by retailers worldwide.",
     requirements: "4+ years of backend development\nStrong Java and Spring Boot skills\nMicroservices architecture experience\nPayments industry experience a plus",
     imageUrl: "",
     employerEmail: "demo@ncrcorp.com",
@@ -1394,7 +1388,6 @@ const SEED_JOBS = [
     employerEmail: "demo@cdc.gov",
     postedAt: new Date().toISOString(),
   },
-  // Charlotte
   {
     id: "seed-93",
     title: "Wealth Management Associate",
@@ -1404,7 +1397,7 @@ const SEED_JOBS = [
     commute: "CATS accessible",
     type: "Hybrid",
     tags: ["Wealth Management", "Series 7", "Client Relations"],
-    description: "Support high-net-worth clients with investment and financial planning at one of America's largest banks.",
+    description: "Support high-net-worth clients with investment and financial planning.",
     requirements: "Series 7 and 66 licenses\n2+ years of wealth management experience\nStrong client relationship skills\nCFP preferred",
     imageUrl: "",
     employerEmail: "demo@bankofamerica.com",
@@ -1419,13 +1412,12 @@ const SEED_JOBS = [
     commute: "Charlotte area",
     type: "Hybrid",
     tags: ["Electrical Engineering", "Power Systems", "AutoCAD"],
-    description: "Design and maintain power distribution systems serving millions of customers across the Carolinas.",
+    description: "Design and maintain power distribution systems serving millions of customers.",
     requirements: "PE license preferred\n4+ years of electrical engineering experience\nPower systems experience\nStrong AutoCAD skills",
     imageUrl: "",
     employerEmail: "demo@dukeenergy.com",
     postedAt: new Date().toISOString(),
   },
-  // Miami
   {
     id: "seed-95",
     title: "Hospitality Manager",
@@ -1456,7 +1448,6 @@ const SEED_JOBS = [
     employerEmail: "demo@portmiami.com",
     postedAt: new Date().toISOString(),
   },
-  // Connecticut
   {
     id: "seed-97",
     title: "Quantitative Analyst",
@@ -1466,13 +1457,12 @@ const SEED_JOBS = [
     commute: "Connecticut area",
     type: "Hybrid",
     tags: ["Quantitative Finance", "Python", "R", "Statistics"],
-    description: "Build quantitative models at the world's largest hedge fund. Work with brilliant minds on complex financial problems.",
+    description: "Build quantitative models at the world's largest hedge fund.",
     requirements: "PhD in math, statistics, or related field\nStrong Python and R skills\nFinancial modeling experience\nExceptional analytical abilities",
     imageUrl: "",
     employerEmail: "demo@bridgewater.com",
     postedAt: new Date().toISOString(),
   },
-  // Virginia Wine Country
   {
     id: "seed-98",
     title: "Sommelier",
@@ -1482,13 +1472,12 @@ const SEED_JOBS = [
     commute: "~70 min from DC",
     type: "On-site",
     tags: ["Wine", "Hospitality", "Fine Dining"],
-    description: "Curate the wine experience at one of America's most celebrated restaurants alongside legendary chef Patrick O'Connell.",
+    description: "Curate the wine experience at one of America's most celebrated restaurants.",
     requirements: "Court of Master Sommeliers certification\n5+ years of fine dining experience\nExtensive wine knowledge\nExceptional guest service skills",
     imageUrl: "",
     employerEmail: "demo@theinnatlittlewashington.com",
     postedAt: new Date().toISOString(),
   },
-  // Security Clearance / Contractor
   {
     id: "seed-99",
     title: "Security Clearance Investigator",
@@ -1498,13 +1487,12 @@ const SEED_JOBS = [
     commute: "~35 min from DC",
     type: "Hybrid",
     tags: ["Background Investigation", "Security Clearance", "Federal"],
-    description: "Conduct background investigations for federal security clearance applicants with flexible scheduling.",
+    description: "Conduct background investigations for federal security clearance applicants.",
     requirements: "Active federal investigator credential preferred\n2+ years of investigation experience\nUS citizenship required\nStrong interview and writing skills",
     imageUrl: "",
     employerEmail: "demo@caci.com",
     postedAt: new Date().toISOString(),
   },
-  // Film / Entertainment
   {
     id: "seed-100",
     title: "Film Production Coordinator",
@@ -1514,7 +1502,7 @@ const SEED_JOBS = [
     commute: "Atlanta area",
     type: "On-site",
     tags: ["Film Production", "Coordination", "Entertainment"],
-    description: "Coordinate production activities at one of America's largest film studios on major film and TV productions.",
+    description: "Coordinate production activities at one of America's largest film studios.",
     requirements: "2+ years of film production experience\nStrong organizational skills\nAbility to work long hours on set\nEntertainment industry connections a plus",
     imageUrl: "",
     employerEmail: "demo@tylerperrystudios.com",
@@ -1576,5 +1564,50 @@ export const storage = {
     const roles = JSON.parse(localStorage.getItem(KEYS.userRoles) || "{}");
     roles[email] = role;
     localStorage.setItem(KEYS.userRoles, JSON.stringify(roles));
+  },
+
+  // Bookmarks
+  getBookmarks(email) {
+    try {
+      const all = JSON.parse(localStorage.getItem(KEYS.bookmarks) || "{}");
+      return all[email] || [];
+    } catch { return []; }
+  },
+  toggleBookmark(email, jobId) {
+    const all = JSON.parse(localStorage.getItem(KEYS.bookmarks) || "{}");
+    if (!all[email]) all[email] = [];
+    const idx = all[email].indexOf(jobId);
+    if (idx >= 0) all[email].splice(idx, 1);
+    else all[email].push(jobId);
+    localStorage.setItem(KEYS.bookmarks, JSON.stringify(all));
+    return all[email];
+  },
+  isBookmarked(email, jobId) {
+    return this.getBookmarks(email).includes(jobId);
+  },
+
+  // Hidden jobs
+  getHidden(email) {
+    try {
+      const all = JSON.parse(localStorage.getItem(KEYS.hidden) || "{}");
+      return all[email] || [];
+    } catch { return []; }
+  },
+  hideJob(email, jobId) {
+    const all = JSON.parse(localStorage.getItem(KEYS.hidden) || "{}");
+    if (!all[email]) all[email] = [];
+    if (!all[email].includes(jobId)) all[email].push(jobId);
+    localStorage.setItem(KEYS.hidden, JSON.stringify(all));
+  },
+  unhideJob(email, jobId) {
+    const all = JSON.parse(localStorage.getItem(KEYS.hidden) || "{}");
+    if (!all[email]) return;
+    all[email] = all[email].filter(id => id !== jobId);
+    localStorage.setItem(KEYS.hidden, JSON.stringify(all));
+  },
+  clearHidden(email) {
+    const all = JSON.parse(localStorage.getItem(KEYS.hidden) || "{}");
+    all[email] = [];
+    localStorage.setItem(KEYS.hidden, JSON.stringify(all));
   },
 };

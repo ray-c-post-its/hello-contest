@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function Navbar({ email, role, activeMode, onModeSwitch, onNavigate, signOut }) {
+export default function Navbar({ email, role, activeMode, onModeSwitch, onNavigate, onOpenChat, signOut }) {
   return (
     <>
       <link
@@ -46,12 +46,10 @@ export default function Navbar({ email, role, activeMode, onModeSwitch, onNaviga
           Post-Its
         </button>
 
-        {/* Center nav links — changes based on active mode */}
+        {/* Center nav */}
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
           {activeMode === "seeker" && (
-            <>
-              <NavLink onClick={() => onNavigate("home")}>Browse Jobs</NavLink>
-            </>
+            <NavLink onClick={() => onNavigate("home")}>Browse Jobs</NavLink>
           )}
           {activeMode === "employer" && (
             <>
@@ -59,11 +57,36 @@ export default function Navbar({ email, role, activeMode, onModeSwitch, onNaviga
               <NavLink onClick={() => onNavigate("createJob")}>+ New Job</NavLink>
             </>
           )}
+
+          {/* Ask AI button — only for seekers */}
+          {activeMode === "seeker" && (
+            <button
+              onClick={onOpenChat}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 16px",
+                background: "#fff9c4",
+                border: "none",
+                borderRadius: "20px",
+                fontSize: "13px",
+                fontWeight: "700",
+                cursor: "pointer",
+                fontFamily: "'Inter', sans-serif",
+                color: "#1a1a1a",
+                boxShadow: "2px 2px 0px #e8d84a",
+                transition: "all 0.15s ease",
+                marginLeft: "4px",
+              }}
+            >
+              ✨ Ask AI
+            </button>
+          )}
         </div>
 
         {/* Right side */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          {/* Mode toggle */}
           {role && (
             <div style={{
               display: "flex",
@@ -72,21 +95,14 @@ export default function Navbar({ email, role, activeMode, onModeSwitch, onNaviga
               padding: "3px",
               gap: "2px",
             }}>
-              <ModeButton
-                active={activeMode === "seeker"}
-                onClick={() => onModeSwitch("seeker")}
-              >
+              <ModeButton active={activeMode === "seeker"} onClick={() => onModeSwitch("seeker")}>
                 🔍 Browse
               </ModeButton>
-              <ModeButton
-                active={activeMode === "employer"}
-                onClick={() => onModeSwitch("employer")}
-              >
+              <ModeButton active={activeMode === "employer"} onClick={() => onModeSwitch("employer")}>
                 🏢 Hiring
               </ModeButton>
             </div>
           )}
-
           <span style={{
             fontSize: "13px",
             color: "#888",
@@ -97,7 +113,6 @@ export default function Navbar({ email, role, activeMode, onModeSwitch, onNaviga
           }}>
             {email}
           </span>
-
           <button onClick={signOut} style={{
             fontSize: "13px",
             padding: "7px 16px",

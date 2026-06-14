@@ -3,7 +3,15 @@ import React, { useState } from "react";
 const CARD_COLORS = ["#fff9c4", "#ffd1dc", "#cce5ff", "#d4edda"];
 const ROTATIONS = [-2.1, 1.8, -1.3, 2.4, -1.7, 1.2];
 
-export default function PostItCard({ job, index, onClick, onDelete }) {
+export default function PostItCard({
+  job,
+  index,
+  onClick,
+  onDelete,
+  isBookmarked,
+  onBookmark,
+  onHide,
+}) {
   const [hovered, setHovered] = useState(false);
   const bg = CARD_COLORS[index % CARD_COLORS.length];
   const rot = ROTATIONS[index % ROTATIONS.length];
@@ -40,11 +48,82 @@ export default function PostItCard({ job, index, onClick, onDelete }) {
         boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
       }} />
 
-      {/* Type pill */}
+      {/* Action buttons top right */}
       <div style={{
         position: "absolute",
-        top: "14px",
-        right: "14px",
+        top: "10px",
+        right: "10px",
+        display: "flex",
+        gap: "4px",
+      }}
+        onClick={e => e.stopPropagation()}
+      >
+        {onBookmark && (
+          <button
+            onClick={() => onBookmark(job.id)}
+            title={isBookmarked ? "Remove bookmark" : "Bookmark"}
+            style={{
+              background: isBookmarked ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.07)",
+              border: "none",
+              borderRadius: "50%",
+              width: "28px",
+              height: "28px",
+              cursor: "pointer",
+              fontSize: "13px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "background 0.15s ease",
+            }}
+          >
+            {isBookmarked ? "🔖" : "🔖"}
+          </button>
+        )}
+        {onHide && (
+          <button
+            onClick={() => onHide(job.id)}
+            title="Not interested"
+            style={{
+              background: "rgba(0,0,0,0.07)",
+              border: "none",
+              borderRadius: "50%",
+              width: "28px",
+              height: "28px",
+              cursor: "pointer",
+              fontSize: "13px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            ✕
+          </button>
+        )}
+        {onDelete && (
+          <button
+            onClick={() => onDelete(job.id)}
+            title="Delete posting"
+            style={{
+              background: "rgba(0,0,0,0.07)",
+              border: "none",
+              borderRadius: "50%",
+              width: "28px",
+              height: "28px",
+              cursor: "pointer",
+              fontSize: "13px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            🗑
+          </button>
+        )}
+      </div>
+
+      {/* Type pill */}
+      <div style={{
+        display: "inline-block",
         fontSize: "10px",
         padding: "3px 9px",
         borderRadius: "20px",
@@ -53,11 +132,11 @@ export default function PostItCard({ job, index, onClick, onDelete }) {
         fontWeight: "600",
         letterSpacing: "0.5px",
         textTransform: "uppercase",
+        marginBottom: "10px",
       }}>
         {job.type}
       </div>
 
-      {/* Company image */}
       {job.imageUrl && (
         <img
           src={job.imageUrl}
@@ -78,7 +157,7 @@ export default function PostItCard({ job, index, onClick, onDelete }) {
         fontWeight: "700",
         color: "#1a1a1a",
         marginBottom: "4px",
-        paddingRight: "48px",
+        paddingRight: "70px",
       }}>
         {job.title}
       </div>
@@ -107,26 +186,15 @@ export default function PostItCard({ job, index, onClick, onDelete }) {
         ))}
       </div>
 
-      {onDelete && (
-        <button
-          onClick={e => { e.stopPropagation(); onDelete(job.id); }}
-          style={{
-            position: "absolute",
-            bottom: "12px",
-            right: "12px",
-            background: "rgba(0,0,0,0.1)",
-            border: "none",
-            borderRadius: "50%",
-            width: "26px",
-            height: "26px",
-            cursor: "pointer",
-            fontSize: "13px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >✕</button>
-      )}
+      <div style={{
+        fontFamily: "'Caveat', cursive",
+        fontSize: "18px",
+        fontWeight: "700",
+        color: "#1a1a1a",
+        marginTop: "10px",
+      }}>
+        {job.salary}
+      </div>
     </div>
   );
 }

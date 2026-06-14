@@ -7,6 +7,7 @@ import { awsConfig } from "./aws-config";
 import { storage } from "./utils/storage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import AIChat from "./components/AIChat";
 import RoleSelect from "./pages/RoleSelect";
 import JobBoard from "./pages/JobBoard";
 import JobDetail from "./pages/JobDetail";
@@ -21,18 +22,21 @@ function PostItsApp({ user, signOut }) {
   const email = user?.signInDetails?.loginId || user?.attributes?.email || user?.username || "";
 
   const [role, setRole] = useState(null);
-  const [activeMode, setActiveMode] = useState(null); // "seeker" or "employer"
+  const [activeMode, setActiveMode] = useState(null);
   const [view, setView] = useState("home");
   const [selectedJob, setSelectedJob] = useState(null);
   const [selectedJobIndex, setSelectedJobIndex] = useState(0);
   const [viewingApplicationsFor, setViewingApplicationsFor] = useState(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [allJobs, setAllJobs] = useState([]);
 
   useEffect(() => {
     const saved = storage.getUserRole(email);
     if (saved) {
       setRole(saved);
-      setActiveMode(saved); // default active mode matches their role
+      setActiveMode(saved);
     }
+    setAllJobs(storage.getJobs());
   }, [email]);
 
   const handleRoleSelected = (r) => {
@@ -46,6 +50,7 @@ function PostItsApp({ user, signOut }) {
     setView("home");
     setSelectedJob(null);
     setViewingApplicationsFor(null);
+    setChatOpen(false);
     window.scrollTo(0, 0);
   };
 
@@ -53,6 +58,7 @@ function PostItsApp({ user, signOut }) {
     setSelectedJob(job);
     setSelectedJobIndex(index);
     setView("jobDetail");
+    setChatOpen(false);
   };
 
   const handleNavigate = (dest) => {
@@ -87,13 +93,26 @@ function PostItsApp({ user, signOut }) {
         activeMode={activeMode}
         onModeSwitch={handleModeSwitch}
         onNavigate={handleNavigate}
+        onOpenChat={() => setChatOpen(true)}
         signOut={signOut}
       />
 
+      {/* AI Chat overlay */}
+      <AIChat
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+        jobs={allJobs}
+        onSelectJob={handleSelectJob}
+        userEmail={email}
+      />
+
       <div style={{ flex: 1 }}>
-        {/* Seeker mode views */}
+        {/* Seeker views */}
         {activeMode === "seeker" && view === "home" && (
-          <JobBoard onSelectJob={handleSelectJob} />
+          <JobBoard
+            onSelectJob={handleSelectJob}
+            userEmail={email}
+          />
         )}
         {activeMode === "seeker" && view === "jobDetail" && selectedJob && (
           <JobDetail
@@ -112,7 +131,7 @@ function PostItsApp({ user, signOut }) {
           />
         )}
 
-        {/* Employer mode views */}
+        {/* Employer views */}
         {activeMode === "employer" && view === "home" && (
           <EmployerDashboard
             employerEmail={email}
