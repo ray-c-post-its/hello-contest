@@ -129,10 +129,17 @@ export default function SwipeJobs({ userEmail, onSelectJob, onBack }) {
           margin: "0 0 8px",
           color: "#1a1a1a",
         }}>Scout Jobs</h1>
-        <p style={{ color: "#888", fontSize: "14px", margin: "0 0 16px" }}>
-          Swipe right to save, left to pass · {index + 1} of {jobs.length}
-        </p>
-
+        <p style={{
+  fontFamily: "'Caveat', cursive",
+  fontSize: "18px",
+  color: "#aaa",
+  margin: "0 0 4px",
+}}>
+  For those who don't know what they're looking for yet.
+</p>
+<p style={{ color: "#888", fontSize: "14px", margin: "0 0 16px" }}>
+  Swipe right to save, left to pass · {index + 1} of {jobs.length}
+</p>
         {/* Progress bar */}
         <div style={{
           maxWidth: "300px", margin: "0 auto", height: "4px",
