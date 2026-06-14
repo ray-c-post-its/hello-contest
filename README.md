@@ -20,6 +20,16 @@ Post-Its is an AI-powered recruitment platform that takes a "dating app for jobs
 
 ---
 
+## Our Philosophy: AI Assists, Humans Decide
+
+Post-Its uses AI to help job seekers find the right opportunities — but we believe the hiring decision itself should always be made by a human. Employers on Post-Its read every application personally. There is no algorithmic screening, no automated rejection, and no AI scoring candidates. 
+
+We use AI to reduce noise and surface better matches, so that when a recruiter does sit down to read an application, it's worth their time. The final call — always — belongs to a person.
+
+This matters because hiring is one of the most consequential decisions a company makes, and one of the most important moments in a person's career. We think both deserve more than an algorithm.
+
+---
+
 ## Live Features
 
 ### For Job Seekers
