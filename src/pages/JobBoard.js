@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { storage } from "../utils/storage";
 import PostItCard from "../components/PostItCard";
 
-const ANTHROPIC_API_KEY = process.env.REACT_APP_ANTHROPIC_API_KEY;
+const LAMBDA_URL = "https://qoofy2efipnxelwsd4xz7ithfu0tdlkh.lambda-url.us-east-1.on.aws/";
 
 export default function JobBoard({ onSelectJob }) {
   const [jobs, setJobs] = useState([]);
@@ -31,13 +31,10 @@ export default function JobBoard({ onSelectJob }) {
     setResults([]);
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch(LAMBDA_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
         },
         body: JSON.stringify({
           model: "claude-haiku-4-5-20251001",
@@ -329,25 +326,4 @@ Return ONLY a valid JSON object with no markdown:
                 )}
               </div>
 
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-                gap: "48px 36px",
-                paddingTop: "20px",
-              }}>
-                {displayJobs.map((job, i) => (
-                  <PostItCard
-                    key={job.id}
-                    job={job}
-                    index={i}
-                    onClick={() => onSelectJob(job, i)}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+              <div

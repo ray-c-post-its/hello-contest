@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { storage } from "../utils/storage";
 
-const ANTHROPIC_API_KEY = process.env.REACT_APP_ANTHROPIC_API_KEY;
+const LAMBDA_URL = "https://qoofy2efipnxelwsd4xz7ithfu0tdlkh.lambda-url.us-east-1.on.aws/";
 
 export default function Apply({ job, userEmail, onBack, onSubmitted }) {
   const [questions, setQuestions] = useState([]);
@@ -17,13 +17,10 @@ export default function Apply({ job, userEmail, onBack, onSubmitted }) {
 
   const generateQuestions = async () => {
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch(LAMBDA_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
         },
         body: JSON.stringify({
           model: "claude-haiku-4-5-20251001",
