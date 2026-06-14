@@ -50,11 +50,8 @@ This matters because hiring is one of the most consequential decisions a company
 
 ## Screenshots
 
-![Post-Its Job Board](docs/screenshot.png)
+https://cdn.corenexis.com/f/D4JpXkn5zN6.png
 
-> Add additional screenshots to the docs/ folder and reference them here
-
----
 
 ## The Numbers Behind Post-Its
 
